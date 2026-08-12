@@ -1,0 +1,60 @@
+name: Job Hunter Bot
+
+on:
+  schedule:
+    # Cada 2 horas (hora UTC). Nota: GitHub puede retrasar el cron 5-30 min, es normal.
+    - cron: '0 */2 * * *'
+  workflow_dispatch: {}   # boton "Run workflow" para ejecutarlo manualmente
+
+# Evita que dos ciclos corran a la vez (si uno se retrasa)
+concurrency:
+  group: job-hunter
+  cancel-in-progress: false
+
+permissions:
+  contents: write   # necesario para guardar jobs.db (memoria de deduplicacion)
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Ejecutar un ciclo del bot
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_SERVER: ${{ secrets.NTFY_SERVER || 'https://ntfy.sh' }}
+          NTFY_TOKEN: ${{ secrets.NTFY_TOKEN }}
+          JOOBLE_API_KEY: ${{ secrets.JOOBLE_API_KEY }}
+          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
+          RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python main.py --once
+
+      - name: Guardar jobs.db (memoria anti-duplicados)
+        if: always()   # guarda la BD aunque alguna fuente haya fallado
+        run: |
+          git config user.name "job-hunter-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add jobs.db
+          # Solo commitea si la BD cambio
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: actualizar jobs.db [skip ci]"
+            # Reintenta el push si otro run hizo push mientras tanto
+            git pull --rebase -X ours || true
+            git push
+          else
+            echo "Sin cambios en la base de datos"
+          fi
