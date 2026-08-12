@@ -1,0 +1,220 @@
+# =============================================================================
+#  Job Hunter Bot - configuración principal
+#  TODO es configurable aquí. El código NO tiene keywords, skills ni topics
+#  hardcodeados: el matcher lee tu perfil desde `cv_profile`.
+# =============================================================================
+
+cv_profile:
+  name: "Andres Raul Ore Soto"
+  summary: >
+    Estudiante de Ingeniería de Sistemas (3er año, UNSA Arequipa), Alumni de Oracle Next
+    Education (ONE) especialización Backend. Proyectos full stack con React, Electron,
+    JavaScript, TypeScript, Node.js, Bootstrap y SQL/MariaDB. Integración de API de ChatGPT.
+    Participante IEEEXtreme y GameJAM. Busco primer empleo como desarrollador
+    Junior/Trainee/Practicante. Inglés básico A2 (lectura técnica), portugués intermedio.
+
+  # Palabras que indican nivel de entrada (+25 si aparecen en el TÍTULO)
+  seniority: ["junior", "jr", "jr.", "trainee", "practicante", "practicas", "prácticas", "intern", "internship", "entry level", "entry-level", "graduate", "sin experiencia", "recien egresado", "recén egresado", "estudiante", "becario", "aprendiz", "no experience"]
+
+  # Skills principales del CV (6 pts c/u, máximo 24)
+  core_skills: ["javascript", "js", "react", "react.js", "reactjs", "node.js", "nodejs", "node", "sql", "java", "python", "html", "css"]
+
+  # Skills secundarias (2 pts c/u, máximo 6)
+  secondary_skills: ["typescript", "c#", "c++", "flutter", "dart", "bootstrap", "electron", "mariadb", "mysql", "postgresql", "git", "github", "frontend", "front-end", "backend", "back-end", "full stack", "fullstack", "inteligencia artificial", "ai", "chatgpt", "llm", "api rest", "rest api", "blender", "3d"]
+
+  # Filtros duros -------------------------------------------------------------
+  max_years_experience: 2          # descarta ofertas que pidan más años que esto
+  english_level: "A2"
+  strict_english_filter: true      # descarta ofertas que exijan inglés avanzado/fluido
+
+  # Frases que indican exigencia de inglés avanzado (normalizadas sin tildes)
+  english_exclude_patterns:
+    - "ingles avanzado"
+    - "ingles fluido"
+    - "ingles conversacional"
+    - "ingles nivel avanzado"
+    - "ingles c1"
+    - "ingles c2"
+    - "english c1"
+    - "english c2"
+    - "fluent english"
+    - "fluent in english"
+    - "advanced english"
+    - "english fluency"
+    - "fluency in english"
+    - "conversational english required"
+    - "proficient in english"
+    - "english proficiency required"
+    - "bilingual"
+    - "bilingue"
+    - "dominio del ingles"
+    - "excelente ingles"
+
+  # Frases que confirman que el inglés pedido es básico/intermedio (NO descartar)
+  english_allow_patterns:
+    - "ingles basico"
+    - "ingles intermedio"
+    - "ingles tecnico"
+    - "ingles lectura"
+    - "basic english"
+    - "intermediate english"
+    - "english reading"
+    - "technical english"
+    - "ingles a1"
+    - "ingles a2"
+    - "ingles b1"
+
+  # Stacks que NO manejo: si la oferta gira solo alrededor de ellos, se descarta
+  incompatible_stacks: ["php", "laravel", "symfony", "wordpress", "ruby on rails", "ruby", "golang", "go lang", "rust", "cobol", "sap abap", "abap", "salesforce", "sharepoint", "delphi", "visual basic", "vba", "powerbuilder", "scala", "perl", "drupal", "magento", "odoo"]
+
+  # Roles técnicos válidos: si la oferta no menciona ninguno (ni una skill), se descarta
+  dev_role_keywords: ["developer", "desarrollador", "desarrolladora", "desarrollo de software", "desarrollo web", "programador", "programadora", "programming", "software", "sistemas", "informatica", "informática", "computacion", "computación", "ingenieria de software", "software engineer", "engineer", "frontend", "front-end", "backend", "back-end", "fullstack", "full stack", "qa", "testing", "tester", "data", "devops", "web", "mobile", "aplicaciones", "analista de sistemas", "soporte ti", "it support", "tecnologias de la informacion"]
+
+  # Rubros no relacionados a desarrollo (descartados si no hay skills ni rol técnico)
+  non_dev_keywords: ["ventas", "vendedor", "vendedora", "asesor comercial", "ejecutivo comercial", "call center", "teleoperador", "telemarketing", "cobranzas", "cajero", "cajera", "mesero", "azafata", "almacen", "almacenero", "conductor", "repartidor", "seguridad", "vigilante", "limpieza", "enfermer", "docente", "profesor", "reclutamiento", "recursos humanos", "contabilidad", "contador", "tesoreria", "marketing digital", "community manager", "disenador grafico", "diseñador grafico", "produccion", "operario", "mecanico", "electricista", "soldador", "mineria", "obra"]
+
+  # Señales amigables para mi perfil (+10)
+  friendly_signals: ["estudiante", "part-time", "part time", "medio tiempo", "mentoria", "mentoría", "mentoring", "formacion", "formación", "training", "capacitacion", "bootcamp", "primer empleo", "first job", "oracle", "one", "sin experiencia previa", "aprendizaje", "plan de carrera", "practicas profesionales"]
+
+search:
+  # ----- EDITA ESTO: palabras clave de puesto que quieres buscar -------------
+  keywords:
+    - "junior developer"
+    - "trainee programador"
+    - "practicante desarrollo de software"
+    - "junior full stack"
+    - "junior backend"
+    - "junior frontend react"
+
+  # Palabras que descartan la oferta (seniority)
+  exclude_keywords:
+    - "senior"
+    - "sr."
+    - " sr "
+    - "lead"
+    - "arquitecto"
+    - "architect"
+    - "principal"
+    - "staff engineer"
+    - "jefe de"
+    - "gerente"
+    - "manager"
+    - "director"
+    - "especialista senior"
+
+  locations:
+    local_city: "Arequipa"
+    country: "Perú"
+    accept_remote: true
+    accept_remote_international: true
+    extra_local_cities: []
+    target_countries: ["Perú", "Peru", "España", "Spain", "Chile", "Argentina", "México", "Mexico", "Estados Unidos", "United States", "USA", "Nueva Zelanda", "New Zealand", "Finlandia", "Finland", "Canadá", "Canada", "Alemania", "Germany", "Remote", "LATAM", "Worldwide"]
+
+matching:
+  min_score: 55
+  max_notifications_per_cycle: 15
+  fresh_hours: 48                  # horas para considerar la oferta "reciente" (+10)
+  cross_source_dedup_days: 7       # dedup cruzada entre fuentes
+  retention_days: 60               # limpieza automática de la BD
+
+  # Descarga la página de detalle cuando la descripción del listado es muy corta,
+  # para evaluar los filtros duros sobre el texto completo
+  enrich_details: true
+  enrich_min_description_chars: 400
+  max_detail_fetches_per_cycle: 30
+
+  # ---- Etapa 3 (opcional): matching semántico CV vs oferta con un LLM ----
+  use_ai_matching: false           # requiere OPENAI_API_KEY (o EMERGENT_LLM_KEY)
+  ai_provider: "openai"            # "openai" (tu key) | "emergent" (EMERGENT_LLM_KEY)
+  ai_model: "gpt-4o-mini"          # alternativas: gpt-4.1-mini, gpt-5-mini
+  ai_weight: 0.4                   # score final = 60% reglas + 40% IA
+  ai_min_rule_score: 40            # solo consulta la IA si las reglas dan al menos esto
+  ai_max_calls_per_cycle: 25
+  ai_timeout_seconds: 25
+
+scheduler:
+  interval_minutes: 60
+  timezone: "America/Lima"
+
+sources:
+  # --- NIVEL A: APIs / JSON público (recomendadas, muy estables) ---
+  jooble: true                # requiere JOOBLE_API_KEY
+  adzuna: true                # requiere ADZUNA_APP_ID + ADZUNA_APP_KEY
+  remotive: true
+  remoteok: true
+  arbeitnow: true
+  themuse: true
+  getonboard: true
+  google_careers: true
+  microsoft_careers: true
+  meta_careers: true
+  teamtailor_enaex: true
+  jsearch: false              # requiere RAPIDAPI_KEY (cubre LinkedIn/Indeed/Glassdoor)
+  # --- NIVEL B: scraping HTML ---
+  computrabajo: true
+  pandape_nttdata: true
+  kitempleo: true
+  buscojobs: true
+  bumeran: true
+  expertini: true
+  jobrapido: true
+  bebee: true
+  # --- NIVEL C: anti-bot fuerte (usar con baja frecuencia) ---
+  linkedin_guest: true
+
+# Opciones por fuente (dominios, límites de páginas, etc.)
+source_options:
+  computrabajo:
+    base_url: "https://pe.computrabajo.com"
+    extra_domains: ["https://cl.computrabajo.com", "https://mx.computrabajo.com", "https://ar.computrabajo.com"]
+    max_details_per_keyword: 5
+  pandape_nttdata:
+    base_url: "https://ntt-data.pandape.computrabajo.com"
+    max_details: 8
+  teamtailor_enaex:
+    base_url: "https://enaexperu.teamtailor.com"
+    max_details: 15
+  kitempleo:
+    base_url: "https://www.kitempleo.pe"
+  buscojobs:
+    base_urls: ["https://www.buscojobs.com", "https://www.buscojobs.pe"]
+  bumeran:
+    base_url: "https://www.bumeran.com.pe"
+  expertini:
+    base_url: "https://pe.expertini.com"
+  jobrapido:
+    base_url: "https://pe.jobrapido.com"
+  bebee:
+    base_url: "https://bebee.com"
+    country_path: "/pe"
+    max_details: 8
+  linkedin_guest:
+    locations: ["Peru", "Arequipa, Peru"]
+    max_keywords_per_cycle: 2
+  adzuna:
+    countries: ["es", "us", "mx", "nz", "ca", "de"]
+    results_per_page: 20
+  jooble:
+    locations: ["Arequipa", "Perú", "Remoto"]
+  jsearch:
+    queries_suffix: "in Peru OR remote"
+    num_pages: 1
+  google_careers:
+    max_keywords_per_cycle: 3
+  microsoft_careers:
+    max_keywords_per_cycle: 2
+  meta_careers:
+    doc_id: "9114524511922157"
+
+advanced:
+  use_playwright: false        # requiere: pip install playwright playwright-stealth && playwright install chromium
+  request_timeout: 20
+  min_delay_seconds: 2
+  max_delay_seconds: 5
+  max_retries: 3
+  circuit_breaker_failures: 3
+  circuit_breaker_hours: 6
+  database_path: "jobs.db"
+  log_file: "logs/bot.log"
+  log_level: "INFO"
+  max_offers_per_source: 300
