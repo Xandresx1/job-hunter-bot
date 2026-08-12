@@ -1,4 +1,3 @@
-yaml
 name: Job Hunter Bot
 
 on:
@@ -54,4 +53,3 @@ jobs:
             git push
           else
             echo "Sin cambios en la base de datos"
-          fi
