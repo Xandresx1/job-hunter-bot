@@ -1,13 +1,12 @@
-yaml
 name: Job Hunter Bot
 
 on:
   schedule:
-    # Cada 2 horas (hora UTC). GitHub puede retrasar el cron 5-30 min, es normal.
+    # Cada 2 horas (hora UTC). Nota: GitHub puede retrasar el cron 5-30 min, es normal.
     - cron: '0 */2 * * *'
   workflow_dispatch: {}   # boton "Run workflow" para ejecutarlo manualmente
 
-# Evita que dos ciclos corran a la vez
+# Evita que dos ciclos corran a la vez (si uno se retrasa)
 concurrency:
   group: job-hunter
   cancel-in-progress: false
@@ -45,13 +44,15 @@ jobs:
         run: python main.py --once
 
       - name: Guardar jobs.db (memoria anti-duplicados)
-        if: always()
+        if: always()   # guarda la BD aunque alguna fuente haya fallado
         run: |
           git config user.name "job-hunter-bot"
           git config user.email "actions@users.noreply.github.com"
           git add jobs.db
+          # Solo commitea si la BD cambio
           if ! git diff --cached --quiet; then
             git commit -m "chore: actualizar jobs.db [skip ci]"
+            # Reintenta el push si otro run hizo push mientras tanto
             git pull --rebase -X ours || true
             git push
           else
