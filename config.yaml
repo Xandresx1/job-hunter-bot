@@ -76,6 +76,10 @@ cv_profile:
   # Señales amigables para mi perfil (+10)
   friendly_signals: ["estudiante", "part-time", "part time", "medio tiempo", "mentoria", "mentoría", "mentoring", "formacion", "formación", "training", "capacitacion", "bootcamp", "primer empleo", "first job", "oracle", "one", "sin experiencia previa", "aprendizaje", "plan de carrera", "practicas profesionales"]
 
+  # NUEVO: penalización a ofertas centradas en desarrollo web (-15 al score)
+  deprioritize_keywords: ["desarrollo web", "desarrollador web", "web developer", "diseño web", "diseno web", "paginas web", "páginas web", "wordpress", "maquetador", "maquetacion web", "frontend", "front-end", "front end"]
+  deprioritize_penalty: 15
+  
 search:
   # ----- EDITA ESTO: palabras clave de puesto que quieres buscar -------------
   keywords:
@@ -107,6 +111,7 @@ search:
     country: "Perú"
     accept_remote: true
     accept_remote_international: true
+    remote_only_outside_local: true
     extra_local_cities: []
     target_countries: ["Perú", "Peru", "España", "Spain", "Chile", "Argentina", "México", "Mexico", "Estados Unidos", "United States", "USA", "Nueva Zelanda", "New Zealand", "Finlandia", "Finland", "Canadá", "Canada", "Alemania", "Germany", "Remote", "LATAM", "Worldwide"]
 
@@ -131,6 +136,28 @@ matching:
   ai_min_rule_score: 40            # solo consulta la IA si las reglas dan al menos esto
   ai_max_calls_per_cycle: 25
   ai_timeout_seconds: 25
+
+# NUEVO: perfil de búsqueda para NUTRICIONISTA - SOLO Arequipa
+nutricion_profile:
+  enabled: true
+  min_score: 50
+  fresh_hours: 48
+  # Estas keywords se AGREGAN a la búsqueda en los portales
+  keywords:
+    - "nutricionista"
+    - "licenciada en nutricion"
+    - "nutricionista clinica"
+    - "nutricion"
+  # El título de la oferta DEBE mencionar algo de nutrición
+  must_have_title: ["nutricionista", "nutricion", "nutriologa", "nutriologo", "dietista"]
+  # SOLO esta ciudad, nunca fuera ni remoto
+  only_city: "Arequipa"
+  # Señales de clínica privada (+25 puntos)
+  private_clinic_signals: ["clinica", "centro medico", "policlinico", "consultorio", "centro de salud privado", "sanna", "auna", "oncosalud", "san juan de dios", "clinica arequipa", "paz holandesa", "clinica san pablo", "valle sur"]
+  # Descarta sector público / SERUMS (ella NO tiene SERUMS)
+  exclude_keywords: ["serums", "serum", "essalud", "minsa", "hospital nacional", "hospital regional", "gobierno regional", "municipalidad", "concurso publico", "contrato cas", "regimen cas", "diresa", "geresa", "red de salud"]
+  # Bonus (+10) si menciona estas señales
+  friendly_signals: ["bachiller", "titulada", "titulado", "colegiada", "colegiado", "recien egresada", "recien egresado", "con o sin experiencia", "sin experiencia"]
 
 scheduler:
   interval_minutes: 60
