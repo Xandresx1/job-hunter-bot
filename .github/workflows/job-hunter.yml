@@ -32,6 +32,7 @@ jobs:
       - name: Ejecutar un ciclo del bot
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_TOPIC_NUTRICION: ${{ secrets.NTFY_TOPIC_NUTRICION }}
           NTFY_SERVER: ${{ secrets.NTFY_SERVER || 'https://ntfy.sh' }}
           NTFY_TOKEN: ${{ secrets.NTFY_TOKEN }}
           JOOBLE_API_KEY: ${{ secrets.JOOBLE_API_KEY }}
