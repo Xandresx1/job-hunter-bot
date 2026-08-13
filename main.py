@@ -31,6 +31,7 @@ from core.http_client import HttpClient  # noqa: E402
 from core.logger import setup_logger  # noqa: E402
 from core.matcher import Matcher  # noqa: E402
 from core.matcher_ai import AIMatcher  # noqa: E402
+from core.matcher_nutricion import NutricionMatcher  # noqa: E402
 from core.models import JobOffer, clean_html, matches_any_keyword, normalize_text  # noqa: E402
 from core.notifier import Notifier  # noqa: E402
 from scrapers.adzuna_api import AdzunaScraper  # noqa: E402
@@ -147,6 +148,7 @@ def enrich_offers(
     http: HttpClient,
     matcher: Matcher,
     matching: dict[str, Any],
+    extra_title_terms: tuple[str, ...] = (),
 ) -> int:
     """Descarga la descripción completa de las ofertas candidatas con texto corto.
 
@@ -169,7 +171,8 @@ def enrich_offers(
         if any(word and word in title for word in matcher.exclude_keywords):
             continue
         looks_junior = any(word and word in title for word in matcher.seniority)
-        if not looks_junior and not matches_any_keyword(title, matcher.keywords):
+        looks_extra = any(term and term in title for term in extra_title_terms)
+        if not looks_junior and not looks_extra and not matches_any_keyword(title, matcher.keywords):
             continue
         candidates.append(offer)
 
@@ -200,7 +203,18 @@ def run_cycle(
     search = config.get("search", {}) or {}
     locations = search.get("locations", {}) or {}
     keywords: list[str] = [k for k in (search.get("keywords") or []) if k]
-
+    
+    # --- NUEVO: perfil nutricionista + notificador de su topic separado ---
+    nutricion = NutricionMatcher(config)
+    if nutricion.enabled:
+        keywords = keywords + [k for k in nutricion.keywords if k not in keywords]
+    notifier_nutricion = Notifier(
+        topic=os.environ.get("NTFY_TOPIC_NUTRICION", ""),
+        server=os.environ.get("NTFY_SERVER", "https://ntfy.sh"),
+        token=os.environ.get("NTFY_TOKEN", ""),
+        timeout=int(advanced.get("request_timeout", 20)),
+    )
+    
     started_at = datetime.now(timezone.utc).isoformat()
     scrapers = build_scrapers(config, http, only=only_source)
     if not scrapers:
@@ -260,7 +274,7 @@ def run_cycle(
 
     # ------------------------------------------------------------ enriquecer
     if matching.get("enrich_details", True):
-        enriched = enrich_offers(all_offers, http, matcher, matching)
+        enriched = enrich_offers(all_offers, http, matcher, matching, tuple(nutricion.must_have_title))
         if enriched:
             log.info("Descripciones completas descargadas: %s ofertas", enriched)
 
@@ -284,6 +298,22 @@ def run_cycle(
             len(rescored),
         )
         accepted = rescored
+        
+        # --------- NUEVO: perfil NUTRICIONISTA (solo Arequipa, sin SERUMS) ---------
+        if nutricion.enabled:
+            nutri_accepted = nutricion.evaluate(all_offers)
+            accepted_ids = {o.job_id for o in accepted}
+            added = 0
+            for offer in nutri_accepted:
+                if offer.job_id in accepted_ids:
+                    continue
+                offer.raw["perfil"] = "nutricion"  # marca para enrutar al topic de nutrición
+                accepted.append(offer)
+                added += 1
+            if added:
+                accepted.sort(key=lambda o: o.score, reverse=True)
+                log.info("Perfil nutricion: %s ofertas aceptadas", added)
+    
     log.info(
         "Ofertas crudas: %s | con score >= %s: %s",
         len(all_offers),
@@ -312,7 +342,10 @@ def run_cycle(
     notified = 0
     if notify and new_offers:
         for offer in new_offers[:max_notifications]:
-            if notifier.send_job(offer):
+            # NUEVO: las ofertas de nutrición van a su propio topic (si está configurado)
+            is_nutricion = offer.raw.get("perfil") == "nutricion"
+            target = notifier_nutricion if (is_nutricion and notifier_nutricion.enabled) else notifier
+            if target.send_job(offer):
                 database.mark_notified(offer.job_id)
                 notified += 1
         remaining = len(new_offers) - max_notifications
@@ -445,6 +478,22 @@ def main(argv: Optional[list[str]] = None) -> int:
                 if ok
                 else "No se pudo enviar la notificación (revisa NTFY_TOPIC/NTFY_SERVER)"
             )
+            # NUEVO: prueba también el topic de nutrición si está configurado
+            topic_nutri = os.environ.get("NTFY_TOPIC_NUTRICION", "").strip()
+            if topic_nutri:
+                notifier_nutri = Notifier(
+                    topic=topic_nutri,
+                    server=os.environ.get("NTFY_SERVER", "https://ntfy.sh"),
+                    token=os.environ.get("NTFY_TOKEN", ""),
+                )
+                ok_nutri = notifier_nutri.send_test()
+                print(
+                    f"Notificación de prueba enviada al topic de NUTRICIÓN ({topic_nutri})"
+                    if ok_nutri
+                    else "No se pudo enviar al topic de nutrición (revisa NTFY_TOPIC_NUTRICION)"
+                )
+            else:
+                print("NTFY_TOPIC_NUTRICION no configurado: no se probó el topic de nutrición")
             return 0 if ok else 1
 
         if args.source:
