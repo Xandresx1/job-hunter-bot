@@ -26,7 +26,6 @@ REMOTE_HINTS: tuple[str, ...] = (
     "work from home",
     "anywhere",
     "wfh",
-    "hibrido",
 )
 
 INTERNATIONAL_REMOTE_HINTS: tuple[str, ...] = (
@@ -120,6 +119,9 @@ class Matcher:
         self.extra_cities = [normalize_text(c) for c in (locations.get("extra_local_cities") or []) if c]
         self.accept_remote = bool(locations.get("accept_remote", True))
         self.accept_remote_international = bool(locations.get("accept_remote_international", True))
+        self.remote_only_outside_local = bool(locations.get("remote_only_outside_local", False))
+        self.deprioritize_keywords = [normalize_text(k) for k in (cv.get("deprioritize_keywords") or []) if k]
+        self.deprioritize_penalty = int(cv.get("deprioritize_penalty", 15))
         self.target_countries = [normalize_text(c) for c in (locations.get("target_countries") or []) if c]
 
         self.min_score = int(matching.get("min_score", 55))
@@ -185,6 +187,12 @@ class Matcher:
         """Filtro de ubicación según config."""
         if self.is_local(offer):
             return True
+        # NUEVO: fuera de la ciudad local (Arequipa) SOLO se aceptan ofertas
+        # que mencionen explícitamente remoto. Nunca presenciales de otras ciudades.
+        if self.remote_only_outside_local:
+            return self.detect_remote(offer) and (
+                self.accept_remote or self.accept_remote_international
+            )
         remote = self.detect_remote(offer)
         if remote and (self.accept_remote or self.accept_remote_international):
             return True
@@ -330,8 +338,15 @@ class Matcher:
             breakdown["senales_amigables"] = 10
             total += 10
 
+        if self.deprioritize_keywords and (
+            self._contains_any(title, self.deprioritize_keywords)
+            or self._contains_phrase(title, self.deprioritize_keywords)
+        ):
+            breakdown["menos_desarrollo_web"] = -self.deprioritize_penalty
+            total -= self.deprioritize_penalty
+
         offer.is_remote = is_remote
-        return MatchResult(min(total, 100), matched_skills, "", breakdown)
+        return MatchResult(max(min(total, 100), 0), matched_skills, "", breakdown)
 
     # Compatibilidad: score simple
     def score(self, offer: JobOffer) -> int:
