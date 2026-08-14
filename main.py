@@ -206,8 +206,9 @@ def run_cycle(
     
     # --- NUEVO: perfil nutricionista + notificador de su topic separado ---
     nutricion = NutricionMatcher(config)
-    if nutricion.enabled:
-        keywords = keywords + [k for k in nutricion.keywords if k not in keywords]
+    # Fuentes donde SÍ se buscan las keywords de nutrición (portales con ofertas de Perú).
+    # Si la lista está vacía o no existe, se busca en todas las fuentes.
+    nutri_sources = set((config.get("nutricion_profile", {}) or {}).get("sources") or [])
     notifier_nutricion = Notifier(
         topic=os.environ.get("NTFY_TOPIC_NUTRICION", ""),
         server=os.environ.get("NTFY_SERVER", "https://ntfy.sh"),
@@ -240,7 +241,11 @@ def run_cycle(
             skipped_sources[scraper.name] = f"circuit breaker hasta {until}"
             continue
         try:
-            offers = scraper.fetch_jobs(keywords, locations)
+            # NUEVO: keywords de nutrición SOLO en los portales peruanos configurados
+            scraper_keywords = keywords
+            if nutricion.enabled and (not nutri_sources or scraper.name in nutri_sources):
+                scraper_keywords = keywords + [k for k in nutricion.keywords if k not in keywords]
+            offers = scraper.fetch_jobs(scraper_keywords, locations)
         except SkipSource as exc:
             log.warning("[%s] omitida: %s", scraper.name, exc)
             skipped_sources[scraper.name] = str(exc)
