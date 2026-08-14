@@ -145,9 +145,9 @@ nutricion_profile:
   # Estas keywords se AGREGAN a la búsqueda en los portales
   keywords:
     - "nutricionista"
-    - "licenciada en nutricion"
-    - "nutricionista clinica"
     - "nutricion"
+
+  sources: ["computrabajo", "kitempleo", "bebee", "expertini", "jooble", "jsearch"]
   # El título de la oferta DEBE mencionar algo de nutrición
   must_have_title: ["nutricionista", "nutricion", "nutriologa", "nutriologo", "dietista"]
   # SOLO esta ciudad, nunca fuera ni remoto
@@ -173,7 +173,7 @@ sources:
   themuse: true
   getonboard: true
   google_careers: true
-  microsoft_careers: true
+  microsoft_careers: false
   meta_careers: true
   teamtailor_enaex: true
   jsearch: false              # requiere RAPIDAPI_KEY (cubre LinkedIn/Indeed/Glassdoor)
