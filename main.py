@@ -299,20 +299,20 @@ def run_cycle(
         )
         accepted = rescored
         
-        # --------- NUEVO: perfil NUTRICIONISTA (solo Arequipa, sin SERUMS) ---------
-        if nutricion.enabled:
-            nutri_accepted = nutricion.evaluate(all_offers)
-            accepted_ids = {o.job_id for o in accepted}
-            added = 0
-            for offer in nutri_accepted:
-                if offer.job_id in accepted_ids:
-                    continue
-                offer.raw["perfil"] = "nutricion"  # marca para enrutar al topic de nutrición
-                accepted.append(offer)
-                added += 1
-            if added:
-                accepted.sort(key=lambda o: o.score, reverse=True)
-                log.info("Perfil nutricion: %s ofertas aceptadas", added)
+    # --------- NUEVO: perfil NUTRICIONISTA (solo Arequipa, sin SERUMS) ---------
+    if nutricion.enabled:
+        nutri_accepted = nutricion.evaluate(all_offers)
+        accepted_ids = {o.job_id for o in accepted}
+        added = 0
+        for offer in nutri_accepted:
+            if offer.job_id in accepted_ids:
+                continue
+            offer.raw["perfil"] = "nutricion"  # marca para enrutar al topic de nutrición
+            accepted.append(offer)
+            added += 1
+        if added:
+            accepted.sort(key=lambda o: o.score, reverse=True)
+            log.info("Perfil nutricion: %s ofertas aceptadas", added)
     
     log.info(
         "Ofertas crudas: %s | con score >= %s: %s",
