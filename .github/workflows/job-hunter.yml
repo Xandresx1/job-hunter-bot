@@ -2,7 +2,11 @@ name: Job Hunter Bot
 
 on:
   schedule:
-    - cron: '0 */2 * * *'
+    # 5 ciclos al día en horario de Lima (UTC-5): 08:00, 11:00, 14:00, 17:00 y 20:00.
+    # Con ~13 min por ciclo son ~65 min/día (~1950 min/mes), DEBAJO del límite
+    # gratuito de 2000 min/mes que aplica si el repositorio es PRIVADO.
+    # (Si el repo es PÚBLICO los minutos son ilimitados y puedes volver a '0 */2 * * *')
+    - cron: '0 1,13,16,19,22 * * *'
   workflow_dispatch: {}
 
 concurrency:
