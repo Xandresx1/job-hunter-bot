@@ -222,6 +222,7 @@ source_options:
     countries: ["es", "us", "mx", "nz", "ca", "de"]
     results_per_page: 20
   jooble:
+    host: "pe.jooble.org"          # DEBE coincidir con el pais donde creaste la key
     locations: ["Arequipa", "Perú", "Remoto"]
   jsearch:
     queries_suffix: "in Peru OR remote"
