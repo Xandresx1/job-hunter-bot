@@ -197,7 +197,7 @@ sources:
   microsoft_careers: false    # ROTA: error SSL de certificado desde datacenter
   meta_careers: false         # ROTA: Meta responde HTTP 400 a IPs de datacenter (GitHub Actions)
   teamtailor_enaex: true
-  jsearch: false              # requiere RAPIDAPI_KEY - ACTIVAR para cubrir Indeed/LinkedIn/Glassdoor
+  jsearch: true              # requiere RAPIDAPI_KEY - ACTIVAR para cubrir Indeed/LinkedIn/Glassdoor
   bumeran: true               # ARREGLADA: ahora usa la API JSON searchNormalizado (nivel A)
   # --- NIVEL B: scraping HTML ---
   computrabajo: true
