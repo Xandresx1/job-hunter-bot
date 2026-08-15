@@ -92,7 +92,7 @@ def test_accept_two_years_experience() -> None:
     """Hasta max_years_experience (2) sí se acepta."""
     result = MATCHER.evaluate_offer(
         offer(
-            "Practicante de desarrollo web",
+            "Practicante de desarrollo de software",
             "Deseable 1 año de experiencia con JavaScript, React y SQL. Modalidad híbrida en Arequipa.",
         )
     )
