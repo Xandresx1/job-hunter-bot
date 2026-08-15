@@ -1,12 +1,13 @@
-"""Matcher independiente para ofertas de NUTRICIONISTA.
+"""Matcher independiente para ofertas de NUTRICIONISTA (modo filtro, SIN puntaje).
 
-Reglas:
-  - El título DEBE mencionar nutrición (nutricionista, nutrición, dietista...).
-  - SOLO Arequipa: nunca fuera de la ciudad, nunca remoto.
-  - Se descartan ofertas del sector público o que pidan SERUMS.
-  - Bonus si la oferta es de clínica privada / centro médico / consultorio.
+Reglas (todas configurables en config.yaml -> nutricion_profile):
+  1. El título DEBE mencionar nutrición (nutricionista, nutrición, dietista...).
+  2. SOLO Arequipa: nunca fuera de la ciudad.
+  3. Se descarta si EXIGE SERUMS (salvo que diga explícitamente "sin serums").
+  4. La oferta debe pedir egresado/bachiller/titulado/licenciado en nutrición.
 
-Se configura por completo en config.yaml -> nutricion_profile.
+Toda oferta que pase los 4 filtros se acepta con score 100 (no hay ranking:
+se notifican TODAS las que cumplan).
 """
 from __future__ import annotations
 
@@ -18,19 +19,46 @@ from core.models import JobOffer, normalize_text
 
 
 class NutricionMatcher:
-    """Puntúa ofertas de nutricionista 0-100 según nutricion_profile."""
+    """Filtra ofertas de nutricionista: acepta/rechaza sin ranking de puntaje."""
 
     def __init__(self, config: dict[str, Any]) -> None:
         profile = config.get("nutricion_profile", {}) or {}
         self.enabled = bool(profile.get("enabled", False))
-        self.min_score = int(profile.get("min_score", 50))
         self.keywords = [k for k in (profile.get("keywords") or []) if k]
-        self.must_have_title = [normalize_text(k) for k in (profile.get("must_have_title") or []) if k]
+        self.must_have_title = [
+            normalize_text(k) for k in (profile.get("must_have_title") or []) if k
+        ]
         self.only_city = normalize_text(profile.get("only_city", "arequipa"))
-        self.private_signals = [normalize_text(k) for k in (profile.get("private_clinic_signals") or []) if k]
-        self.exclude = [normalize_text(k) for k in (profile.get("exclude_keywords") or []) if k]
-        self.friendly = [normalize_text(k) for k in (profile.get("friendly_signals") or []) if k]
-        self.fresh_hours = float(profile.get("fresh_hours", 48))
+        # SOLO se excluye SERUMS (el sector público ya NO se descarta)
+        self.exclude = [normalize_text(k) for k in (profile.get("exclude_keywords") or ["serums", "serum"]) if k]
+        # Frases que indican que el SERUMS NO es requisito (no descartar)
+        self.exclude_allow = [
+            normalize_text(k)
+            for k in (
+                profile.get("exclude_allow_patterns")
+                or [
+                    "sin serums",
+                    "sin serum",
+                    "no requiere serums",
+                    "no se requiere serums",
+                    "no indispensable serums",
+                    "serums no indispensable",
+                    "con o sin serums",
+                ]
+            )
+            if k
+        ]
+        # La oferta debe pedir alguno de estos grados (prefijos: cubren plurales
+        # y femeninos: egresad-o/a/os, titulad-o/a, licenciad-o/a, etc.)
+        self.require_degree = bool(profile.get("require_degree", True))
+        self.degree_terms = [
+            normalize_text(k)
+            for k in (
+                profile.get("degree_terms")
+                or ["egresad", "bachiller", "titulad", "licenciad", "colegiad", "titulo profesional", "licenciatura"]
+            )
+            if k
+        ]
         self.log = get_logger("matcher_nutricion")
 
     # ------------------------------------------------------------------ helpers
@@ -48,8 +76,14 @@ class NutricionMatcher:
                 hits.append(p)
         return hits
 
-    # ------------------------------------------------------------------ scoring
+    @staticmethod
+    def _prefix_hits(haystack: str, prefixes: list[str]) -> list[str]:
+        """Coincidencia por subcadena (prefijos tipo 'titulad' -> titulado/a/os)."""
+        return [p for p in prefixes if p and p in haystack]
+
+    # ------------------------------------------------------------------ filtro
     def evaluate_offer(self, offer: JobOffer) -> MatchResult:
+        """Devuelve score 100 si pasa TODOS los filtros; 0 con el motivo si no."""
         title = normalize_text(offer.title)
         full_text = offer.searchable_text()
 
@@ -58,43 +92,28 @@ class NutricionMatcher:
         if not title_hits:
             return MatchResult(0, [], "titulo sin mencion a nutricion")
 
-        # 2) SOLO Arequipa (ni remoto, ni otras ciudades)
+        # 2) SOLO Arequipa
         loc_text = normalize_text(
             f"{offer.location} {offer.title} {offer.description[:600]}"
         )
         if self.only_city not in loc_text:
             return MatchResult(0, [], f"fuera de {self.only_city}")
 
-        # 3) Descartar sector público / SERUMS
+        # 3) Descartar SOLO si exige SERUMS (con excepción de "sin serums")
         excl = self._phrase_hits(full_text, self.exclude)
-        if excl:
-            return MatchResult(0, [], f"excluida (sector publico/serums): '{excl[0]}'")
+        if excl and not any(allow in full_text for allow in self.exclude_allow):
+            return MatchResult(0, [], f"exige serums: '{excl[0]}'")
 
-        # 4) Scoring positivo
-        breakdown: dict[str, int] = {"titulo_nutricion": 30, "arequipa": 20}
-        total = 50
-        matched: list[str] = list(title_hits)
+        # 4) Debe pedir egresado / bachiller / titulado / licenciado
+        degree_hits = self._prefix_hits(full_text, self.degree_terms)
+        if self.require_degree and not degree_hits:
+            return MatchResult(0, [], "no menciona egresado/bachiller/titulado")
 
-        clinic_hits = self._phrase_hits(full_text, self.private_signals)
-        if clinic_hits:
-            breakdown["clinica_privada"] = 25
-            total += 25
-            matched.extend(clinic_hits[:3])
-
-        friendly_hits = self._phrase_hits(full_text, self.friendly)
-        if friendly_hits:
-            breakdown["senales_amigables"] = 10
-            total += 10
-
-        age = offer.age_hours
-        if age is not None and age <= self.fresh_hours:
-            breakdown["publicacion_reciente"] = 10
-            total += 10
-
-        return MatchResult(min(total, 100), list(dict.fromkeys(matched)), "", breakdown)
+        matched = list(dict.fromkeys(title_hits + degree_hits + [self.only_city]))
+        return MatchResult(100, matched, "", {"filtro_nutricion": 100})
 
     def evaluate(self, offers: list[JobOffer]) -> list[JobOffer]:
-        """Puntúa la lista y devuelve solo las aceptadas (no toca las rechazadas)."""
+        """Devuelve TODAS las ofertas que pasan los filtros (sin ranking)."""
         if not self.enabled:
             return []
         accepted: list[JobOffer] = []
@@ -104,13 +123,12 @@ class NutricionMatcher:
             try:
                 result = self.evaluate_offer(offer)
             except Exception as exc:  # noqa: BLE001 - nunca romper el ciclo
-                self.log.warning("Error puntuando '%s': %s", offer.title[:60], exc)
+                self.log.warning("Error evaluando '%s': %s", offer.title[:60], exc)
                 continue
-            if result.score >= self.min_score:
+            if result.score > 0:
                 offer.score = result.score
                 offer.matched_skills = result.matched_skills
                 offer.reject_reason = ""
                 offer.score_breakdown = result.breakdown
                 accepted.append(offer)
-        accepted.sort(key=lambda o: o.score, reverse=True)
         return accepted
