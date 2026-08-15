@@ -1,10 +1,10 @@
 """JSearch API (RapidAPI) - agrega Google for Jobs (LinkedIn, Indeed, Glassdoor...)."""
 from __future__ import annotations
-
+from datetime import datetime, timezone
 from typing import Any
 
 from core.models import JobOffer
-from scrapers.base import BaseScraper, ScraperError
+from scrapers.base import BaseScraper, ScraperError, SkipSource
 
 API_URL = "https://jsearch.p.rapidapi.com/search"
 API_HOST = "jsearch.p.rapidapi.com"
@@ -21,6 +21,18 @@ class JSearchScraper(BaseScraper):
     def fetch_jobs(self, keywords: list[str], locations: dict[str, Any]) -> list[JobOffer]:
         """Busca cada keyword y devuelve las ofertas agregadas por Google for Jobs."""
         self.ensure_credentials()
+        # Control de cuota (plan gratuito RapidAPI = 200 requests/mes):
+        # solo corre en las horas UTC configuradas.
+        run_hours = self.option("run_hours_utc") or []
+        if run_hours:
+            current_hour = datetime.now(timezone.utc).hour
+            if current_hour not in [int(h) for h in run_hours]:
+                raise SkipSource(
+                    f"fuera de las horas configuradas (hora UTC actual: {current_hour}, "
+                    f"corre en: {run_hours})"
+                )
+        search_keywords = self.option("keywords_override") or keywords
+        max_keywords = int(self.option("max_keywords_per_cycle", len(search_keywords)))
         headers = {
             "X-RapidAPI-Key": self.env("RAPIDAPI_KEY"),
             "X-RapidAPI-Host": API_HOST,
@@ -30,7 +42,7 @@ class JSearchScraper(BaseScraper):
         num_pages = int(self.option("num_pages", 1))
         offers: list[JobOffer] = []
         errors: list[str] = []
-        for keyword in keywords:
+        for keyword in search_keywords[:max_keywords]:
             params = {
                 "query": f"{keyword} {suffix}".strip(),
                 "page": "1",
