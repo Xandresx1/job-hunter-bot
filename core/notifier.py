@@ -160,6 +160,32 @@ class Notifier:
             priority="low",
             tags=["clipboard"],
         )
+    def send_cycle_summary(
+        self,
+        sources_ok: int,
+        failed_sources: dict[str, str],
+        raw_offers: int,
+        new_jobs: int,
+        notified: int,
+        nutricion_new: int = 0,
+    ) -> bool:
+        """Resumen de fin de ciclo: fuentes, ofertas crudas, nuevas y notificadas."""
+        lines = [
+            f"✅ Fuentes OK: {sources_ok} | ❌ Fallidas: {len(failed_sources)}",
+            f"📦 Ofertas crudas: {raw_offers}",
+            f"🆕 Nuevas guardadas: {new_jobs} | 🔔 Notificadas: {notified}",
+        ]
+        if nutricion_new:
+            lines.append(f"🥗 Nutrición (Arequipa): {nutricion_new} nuevas")
+        if failed_sources:
+            detail = ", ".join(list(failed_sources)[:6])
+            lines.append(f"⚠️ Fallaron: {detail}")
+        return self.send_text(
+            "📊 Job Hunter Bot — ciclo completado",
+            "\n".join(lines),
+            priority="min" if new_jobs == 0 else "low",
+            tags=["bar_chart"],
+        )
 
     def send_all_sources_failed(self, errors: dict[str, str]) -> bool:
         """Alerta de prioridad alta si todas las fuentes fallaron."""
