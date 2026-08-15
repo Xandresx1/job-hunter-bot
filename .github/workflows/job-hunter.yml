@@ -6,7 +6,7 @@ on:
     # Con ~13 min por ciclo son ~65 min/día (~1950 min/mes), DEBAJO del límite
     # gratuito de 2000 min/mes que aplica si el repositorio es PRIVADO.
     # (Si el repo es PÚBLICO los minutos son ilimitados y puedes volver a '0 */2 * * *')
-    - cron: '0 1,13,16,19,22 * * *'
+    - cron: '0 * * * *'
   workflow_dispatch: {}
 
 concurrency:
