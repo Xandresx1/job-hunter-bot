@@ -41,6 +41,7 @@ from scrapers.bebee import BebeeScraper  # noqa: E402
 from scrapers.bumeran import BumeranScraper  # noqa: E402
 from scrapers.buscojobs import BuscojobsScraper  # noqa: E402
 from scrapers.computrabajo import ComputrabajoScraper  # noqa: E402
+from scrapers.convocatorias import ConvocatoriasScraper  # noqa: E402
 from scrapers.expertini import ExpertiniScraper  # noqa: E402
 from scrapers.getonboard_api import GetOnBoardScraper  # noqa: E402
 from scrapers.google_careers import GoogleCareersScraper  # noqa: E402
@@ -73,6 +74,7 @@ SCRAPER_CLASSES: tuple[type[BaseScraper], ...] = (
     JSearchScraper,
     # NIVEL B
     ComputrabajoScraper,
+    ConvocatoriasScraper,
     PandapeScraper,
     KitempleoScraper,
     BuscojobsScraper,
@@ -360,6 +362,19 @@ def run_cycle(
     if notify and scrapers and ok_sources == 0 and failed_sources:
         notifier.send_all_sources_failed(failed_sources)
 
+    # NUEVO: resumen del ciclo al topic principal (no se envía en modo --source)
+    if notify and not only_source:
+        notifier.send_cycle_summary(
+            sources_ok=ok_sources,
+            failed_sources=failed_sources,
+            raw_offers=len(all_offers),
+            new_jobs=len(new_offers),
+            notified=notified,
+            nutricion_new=sum(
+                1 for o in new_offers if o.raw.get("perfil") == "nutricion"
+            ),
+        )
+    
     database.cleanup(int(matching.get("retention_days", 60)))
     database.record_cycle(started_at, ok_sources, len(failed_sources), len(new_offers), notified)
 
