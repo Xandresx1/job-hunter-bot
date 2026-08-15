@@ -137,7 +137,6 @@ matching:
   ai_max_calls_per_cycle: 25
   ai_timeout_seconds: 25
 
-# NUEVO: perfil de búsqueda para NUTRICIONISTA - SOLO Arequipa
 # NUEVO: perfil de búsqueda para NUTRICIONISTA - SOLO Arequipa (modo FILTRO, sin puntaje)
 # Se acepta TODA oferta que cumpla: título de nutrición + Arequipa + no exigir
 # SERUMS + pedir egresado/bachiller/titulado/licenciado.
@@ -153,6 +152,8 @@ nutricion_profile:
   must_have_title: ["nutricionista", "nutricion", "nutriologa", "nutriologo", "dietista"]
   # SOLO esta ciudad
   only_city: "Arequipa"
+  # Señales de clínica privada (+25 puntos)
+  private_clinic_signals: ["clinica", "centro medico", "consultorio"]
   # SOLO se descarta si EXIGE SERUMS (el sector público ya NO se excluye)
   exclude_keywords: ["serums", "serum", "serumista"]
   # Si la oferta aclara que el SERUMS no es requisito, NO se descarta
@@ -167,19 +168,7 @@ nutricion_profile:
   # La oferta debe pedir alguno de estos grados (prefijos: cubren titulado/a/os...)
   require_degree: true
   degree_terms: ["egresad", "bachiller", "titulad", "licenciad", "colegiad", "titulo profesional", "licenciatura"]
-
-  sources: ["computrabajo", "kitempleo", "bebee", "expertini", "jooble", "jsearch"]
-  # El título de la oferta DEBE mencionar algo de nutrición
-  must_have_title: ["nutricionista", "nutricion", "nutriologa", "nutriologo", "dietista"]
-  # SOLO esta ciudad, nunca fuera ni remoto
-  only_city: "Arequipa"
-  # Señales de clínica privada (+25 puntos)
-  private_clinic_signals: ["clinica", "centro medico", "policlinico", "consultorio", "centro de salud privado", "sanna", "auna", "oncosalud", "san juan de dios", "clinica arequipa", "paz holandesa", "clinica san pablo", "valle sur"]
-  # Descarta sector público / SERUMS (ella NO tiene SERUMS)
-  exclude_keywords: ["serums", "serum", "essalud", "minsa", "hospital nacional", "hospital regional", "gobierno regional", "municipalidad", "concurso publico", "contrato cas", "regimen cas", "diresa", "geresa", "red de salud"]
-  # Bonus (+10) si menciona estas señales
-  friendly_signals: ["bachiller", "titulada", "titulado", "colegiada", "colegiado", "recien egresada", "recien egresado", "con o sin experiencia", "sin experiencia"]
-
+  
 scheduler:
   interval_minutes: 60
   timezone: "America/Lima"
