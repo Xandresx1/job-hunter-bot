@@ -138,14 +138,35 @@ matching:
   ai_timeout_seconds: 25
 
 # NUEVO: perfil de búsqueda para NUTRICIONISTA - SOLO Arequipa
+# NUEVO: perfil de búsqueda para NUTRICIONISTA - SOLO Arequipa (modo FILTRO, sin puntaje)
+# Se acepta TODA oferta que cumpla: título de nutrición + Arequipa + no exigir
+# SERUMS + pedir egresado/bachiller/titulado/licenciado.
 nutricion_profile:
   enabled: true
-  min_score: 50
-  fresh_hours: 48
   # Estas keywords se AGREGAN a la búsqueda en los portales
   keywords:
     - "nutricionista"
     - "nutricion"
+
+  sources: ["computrabajo", "kitempleo", "bebee", "expertini", "jooble", "jsearch", "bumeran", "convocatorias"]
+  # El título de la oferta DEBE mencionar algo de nutrición
+  must_have_title: ["nutricionista", "nutricion", "nutriologa", "nutriologo", "dietista"]
+  # SOLO esta ciudad
+  only_city: "Arequipa"
+  # SOLO se descarta si EXIGE SERUMS (el sector público ya NO se excluye)
+  exclude_keywords: ["serums", "serum", "serumista"]
+  # Si la oferta aclara que el SERUMS no es requisito, NO se descarta
+  exclude_allow_patterns:
+    - "sin serums"
+    - "sin serum"
+    - "no requiere serums"
+    - "no se requiere serums"
+    - "no indispensable serums"
+    - "serums no indispensable"
+    - "con o sin serums"
+  # La oferta debe pedir alguno de estos grados (prefijos: cubren titulado/a/os...)
+  require_degree: true
+  degree_terms: ["egresad", "bachiller", "titulad", "licenciad", "colegiad", "titulo profesional", "licenciatura"]
 
   sources: ["computrabajo", "kitempleo", "bebee", "expertini", "jooble", "jsearch"]
   # El título de la oferta DEBE mencionar algo de nutrición
@@ -173,18 +194,19 @@ sources:
   themuse: true
   getonboard: true
   google_careers: true
-  microsoft_careers: false
-  meta_careers: true
+  microsoft_careers: false    # ROTA: error SSL de certificado desde datacenter
+  meta_careers: false         # ROTA: Meta responde HTTP 400 a IPs de datacenter (GitHub Actions)
   teamtailor_enaex: true
-  jsearch: false              # requiere RAPIDAPI_KEY (cubre LinkedIn/Indeed/Glassdoor)
+  jsearch: false              # requiere RAPIDAPI_KEY - ACTIVAR para cubrir Indeed/LinkedIn/Glassdoor
+  bumeran: true               # ARREGLADA: ahora usa la API JSON searchNormalizado (nivel A)
   # --- NIVEL B: scraping HTML ---
   computrabajo: true
+  convocatorias: true         # NUEVA: convocatoriasdetrabajo.com (sector público, Arequipa)
   pandape_nttdata: true
   kitempleo: true
-  buscojobs: true
-  bumeran: true
+  buscojobs: false            # ROTA: WAF bloquea IPs de datacenter (403/405 en toda página)
   expertini: true
-  jobrapido: true
+  jobrapido: false            # ROTA: Cloudflare 403 + requiere JS; inviable sin Playwright
   bebee: true
   # --- NIVEL C: anti-bot fuerte (usar con baja frecuencia) ---
   linkedin_guest: true
@@ -207,6 +229,23 @@ source_options:
     base_urls: ["https://www.buscojobs.com", "https://www.buscojobs.pe"]
   bumeran:
     base_url: "https://www.bumeran.com.pe"
+    site_id: "BMPE"
+    page_size: 20
+  convocatorias:
+    base_url: "https://www.convocatoriasdetrabajo.com"
+    department_id: "4"          # 4 = Arequipa | 0 = todo el país
+    default_location: "Arequipa, Perú"
+    # Solo busca estas keywords en este portal (es de sector público peruano)
+    keywords_override: ["nutricionista", "nutricion", "sistemas", "programador"]
+  jsearch:
+    queries_suffix: "in Peru OR remote"
+    num_pages: 1
+    # Control de cuota gratuita de RapidAPI (200 requests/mes):
+    # 2 corridas/día (13 y 22 UTC = 08:00 y 17:00 Lima) x 3 keywords = ~186 req/mes
+    run_hours_utc: [13, 22]
+    max_keywords_per_cycle: 3
+    # Prioriza nutrición (cubre Indeed vía Google for Jobs) + lo tuyo
+    keywords_override: ["nutricionista Arequipa", "practicante ingenieria de sistemas", "junior developer"]
   expertini:
     base_url: "https://pe.expertini.com"
   jobrapido:
@@ -224,9 +263,6 @@ source_options:
   jooble:
     host: "pe.jooble.org"          # DEBE coincidir con el pais donde creaste la key
     locations: ["Arequipa", "Perú", "Remoto"]
-  jsearch:
-    queries_suffix: "in Peru OR remote"
-    num_pages: 1
   google_careers:
     max_keywords_per_cycle: 3
   microsoft_careers:
