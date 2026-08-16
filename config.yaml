@@ -20,11 +20,11 @@ cv_profile:
   core_skills: ["javascript", "js", "react", "react.js", "reactjs", "node.js", "nodejs", "node", "sql", "java", "python", "html", "css"]
 
   # Skills secundarias (2 pts c/u, máximo 6)
-  secondary_skills: ["typescript", "c#", "c++", "flutter", "dart", "bootstrap", "electron", "mariadb", "mysql", "postgresql", "git", "github", "frontend", "front-end", "backend", "back-end", "full stack", "fullstack", "inteligencia artificial", "ai", "chatgpt", "llm", "api rest", "rest api", "blender", "3d"]
-
+  secondary_skills: ["typescript", "c#", "c++", "flutter", "dart", "bootstrap", "electron", "mariadb", "mysql", "postgresql", "git", "github", "frontend", "front-end", "backend", "back-end", "full stack", "fullstack", "inteligencia artificial", "ai", "chatgpt", "llm", "api rest", "rest api", "blender", "3d", "spring", "spring boot", "microservicios", "microservices", "django", "fastapi"]
+  
   # Filtros duros -------------------------------------------------------------
   max_years_experience: 2          # descarta ofertas que pidan más años que esto
-  english_level: "A2"
+  english_level: "B1"
   strict_english_filter: true      # descarta ofertas que exijan inglés avanzado/fluido
 
   # Frases que indican exigencia de inglés avanzado (normalizadas sin tildes)
@@ -46,8 +46,6 @@ cv_profile:
     - "proficient in english"
     - "english proficiency required"
     - "bilingual"
-    - "bilingue"
-    - "dominio del ingles"
     - "excelente ingles"
 
   # Frases que confirman que el inglés pedido es básico/intermedio (NO descartar)
@@ -89,6 +87,12 @@ search:
     - "junior full stack"
     - "junior backend"
     - "junior frontend react"
+    - "java junior"       
+    - "programador java"
+    - "practicante java"
+    - "junior python"
+    - "practicante python"
+    - "trainee software engineer"
 
   # Palabras que descartan la oferta (seniority)
   exclude_keywords:
@@ -116,7 +120,7 @@ search:
     target_countries: ["Perú", "Peru", "España", "Spain", "Chile", "Argentina", "México", "Mexico", "Estados Unidos", "United States", "USA", "Nueva Zelanda", "New Zealand", "Finlandia", "Finland", "Canadá", "Canada", "Alemania", "Germany", "Remote", "LATAM", "Worldwide"]
 
 matching:
-  min_score: 55
+  min_score: 50
   max_notifications_per_cycle: 15
   fresh_hours: 48                  # horas para considerar la oferta "reciente" (+10)
   cross_source_dedup_days: 7       # dedup cruzada entre fuentes
@@ -242,10 +246,10 @@ source_options:
   bebee:
     base_url: "https://bebee.com"
     country_path: "/pe"
-    max_details: 8
+    max_details: 12
   linkedin_guest:
     locations: ["Peru", "Arequipa, Peru"]
-    max_keywords_per_cycle: 2
+    max_keywords_per_cycle: 4
   adzuna:
     countries: ["es", "us", "mx", "nz", "ca", "de"]
     results_per_page: 20
