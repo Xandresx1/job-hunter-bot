@@ -242,6 +242,16 @@ def run_cycle(
             log.info("[%s] desactivada por circuit breaker hasta %s", scraper.name, until)
             skipped_sources[scraper.name] = f"circuit breaker hasta {until}"
             continue
+
+        min_gap = float(
+            ((config.get("source_options") or {}).get(scraper.name) or {}).get("min_hours_between_runs", 0) or 0
+        )
+        if min_gap and not only_source:
+            last_ok = database.last_success_at(scraper.name)
+            if last_ok and (datetime.now(timezone.utc) - last_ok).total_seconds() < min_gap * 3600:
+                log.info("[%s] omitida: última corrida exitosa hace menos de %sh", scraper.name, min_gap)
+                skipped_sources[scraper.name] = f"corrió hace menos de {min_gap}h"
+                continue
         try:
             # NUEVO: keywords de nutrición SOLO en los portales peruanos configurados
             scraper_keywords = keywords
