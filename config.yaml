@@ -151,7 +151,7 @@ nutricion_profile:
     - "nutricionista"
     - "nutricion"
 
-  sources: ["computrabajo", "kitempleo", "bebee", "expertini", "jooble", "jsearch", "bumeran", "convocatorias"]
+  sources: ["computrabajo", "kitempleo", "bebee", "jooble", "jsearch", "bumeran", "convocatorias"]
   # El título de la oferta DEBE mencionar algo de nutrición
   must_have_title: ["nutricionista", "nutricion", "nutriologa", "nutriologo", "dietista"]
   # SOLO esta ciudad
@@ -195,10 +195,10 @@ sources:
   # --- NIVEL B: scraping HTML ---
   computrabajo: true
   convocatorias: true         # NUEVA: convocatoriasdetrabajo.com (sector público, Arequipa)
-  pandape_nttdata: true
+  pandape_nttdata: false
   kitempleo: true
   buscojobs: false            # ROTA: WAF bloquea IPs de datacenter (403/405 en toda página)
-  expertini: true
+  expertini: false
   jobrapido: false            # ROTA: Cloudflare 403 + requiere JS; inviable sin Playwright
   bebee: true
   # --- NIVEL C: anti-bot fuerte (usar con baja frecuencia) ---
