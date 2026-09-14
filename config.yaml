@@ -231,14 +231,17 @@ source_options:
     # Solo busca estas keywords en este portal (es de sector público peruano)
     keywords_override: ["nutricionista", "nutricion", "sistemas", "programador"]
   jsearch:
-    queries_suffix: "in Peru OR remote"
+    country: "pe"                 # búsqueda en Perú (antes caía al default 'us')
+    language: "es"
+    queries_suffix: ""
     num_pages: 1
-    # Control de cuota gratuita de RapidAPI (200 requests/mes):
-    # 2 corridas/día (13 y 22 UTC = 08:00 y 17:00 Lima) x 3 keywords = ~186 req/mes
-    run_hours_utc: [13, 22]
+    date_posted: "week"
+    timeout_seconds: 60           # la API tarda 6-10 s; con 20 s hay timeouts que gastan cuota
+    # Cuota gratuita 200 req/mes: 3 keywords x máx. 2 corridas/día x 31 días = 186
+    run_hours_utc: [12, 13, 14, 21, 22, 23]   # ventanas amplias porque el cron de GitHub llega tarde
+    min_hours_between_runs: 6                  # garantiza máximo 2 corridas/día
     max_keywords_per_cycle: 3
-    # Prioriza nutrición (cubre Indeed vía Google for Jobs) + lo tuyo
-    keywords_override: ["nutricionista Arequipa", "practicante ingenieria de sistemas", "junior developer"]
+    keywords_override: ["nutricionista Arequipa", "practicante desarrollo de software", "desarrollador junior"]
   expertini:
     base_url: "https://pe.expertini.com"
   jobrapido:
