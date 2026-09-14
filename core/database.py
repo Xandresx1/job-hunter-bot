@@ -202,6 +202,20 @@ class Database:
             return True, row["disabled_until"]
         return False, None
 
+    def last_success_at(self, source: str) -> Optional[datetime]:
+        """Fecha del último ciclo exitoso de una fuente (None si nunca corrió bien)."""
+        with self._lock:
+            row = self.conn.execute(
+                "SELECT last_success_at FROM source_state WHERE source = ?", (source,)
+            ).fetchone()
+        if not row or not row["last_success_at"]:
+            return None
+        try:
+            value = datetime.fromisoformat(row["last_success_at"])
+        except ValueError:
+            return None
+        return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+        
     def record_success(self, source: str, jobs_found: int) -> None:
         """Resetea el contador de fallos de una fuente."""
         with self._lock:
