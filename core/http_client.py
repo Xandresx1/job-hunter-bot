@@ -92,13 +92,9 @@ class HttpClient:
         headers: Optional[dict[str, str]] = None,
         throttle: bool = True,
         allowed_status: tuple[int, ...] = (200, 201, 202, 204),
+        timeout: Optional[int] = None,          # <-- NUEVO
         **kwargs: Any,
     ) -> requests.Response:
-        """Ejecuta un request con retries y backoff exponencial (1s, 4s, 10s).
-
-        Raises:
-            HttpError: si tras los reintentos no se obtiene un status permitido.
-        """
         last_error: str = ""
         for attempt in range(self.max_retries):
             if throttle:
@@ -108,7 +104,7 @@ class HttpClient:
                     method.upper(),
                     url,
                     headers=self.default_headers(headers),
-                    timeout=self.timeout,
+                    timeout=timeout or self.timeout,   # <-- CAMBIO
                     **kwargs,
                 )
             except requests.RequestException as exc:
@@ -118,9 +114,9 @@ class HttpClient:
                 if response.status_code in allowed_status:
                     return response
                 last_error = f"HTTP {response.status_code}"
-                # 4xx que no son rate-limit no mejoran reintentando
                 if response.status_code in (400, 401, 403, 404, 405, 410, 451, 999):
-                    raise HttpError(f"{last_error} en {url}")
+                    body = (response.text or "")[:160].replace("\n", " ").strip()   # <-- NUEVO
+                    raise HttpError(f"{last_error} en {url}" + (f" :: {body}" if body else ""))
             if attempt < self.max_retries - 1:
                 time.sleep(BACKOFF_SECONDS[min(attempt, len(BACKOFF_SECONDS) - 1)])
         raise HttpError(f"{last_error or 'sin respuesta'} en {url}")
