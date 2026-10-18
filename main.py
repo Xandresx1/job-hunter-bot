@@ -167,8 +167,16 @@ def enrich_offers(
     if budget <= 0:
         return 0
 
-    candidates: list[JobOffer] = []
-    for offer in offers:
+    # FIX: prioridad en el presupuesto. Antes se enriquecía en orden de llegada y las
+    # fuentes API (jooble, adzuna...) agotaban los 30 detalles antes de que les tocara
+    # a las ofertas de nutrición / Arequipa de Computrabajo, que quedaban sin evaluar.
+    #   prioridad 0 = título de nutrición (perfil nutricionista, requiere el detalle para
+    #                 verificar egresado/bachiller/titulado)
+    #   prioridad 1 = ubicación en la ciudad local (Arequipa)
+    #   prioridad 2 = resto (junior/keywords)
+    local_city = normalize_text(matcher.local_city) if getattr(matcher, "local_city", "") else ""
+    ranked: list[tuple[int, int, JobOffer]] = []
+    for index, offer in enumerate(offers):
         if not offer.url or len(offer.description or "") >= min_chars:
             continue
         title = normalize_text(offer.title)
@@ -178,7 +186,15 @@ def enrich_offers(
         looks_extra = any(term and term in title for term in extra_title_terms)
         if not looks_junior and not looks_extra and not matches_any_keyword(title, matcher.keywords):
             continue
-        candidates.append(offer)
+        if looks_extra:
+            priority = 0
+        elif local_city and local_city in normalize_text(f"{offer.location} {offer.title}"):
+            priority = 1
+        else:
+            priority = 2
+        ranked.append((priority, index, offer))
+    ranked.sort(key=lambda item: (item[0], item[1]))
+    candidates = [item[2] for item in ranked]
 
     enriched = 0
     for offer in candidates[:budget]:
