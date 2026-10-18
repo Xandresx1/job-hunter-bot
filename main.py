@@ -57,6 +57,7 @@ from scrapers.remoteok_api import RemoteOkScraper  # noqa: E402
 from scrapers.remotive_api import RemotiveScraper  # noqa: E402
 from scrapers.teamtailor import TeamtailorScraper  # noqa: E402
 from scrapers.themuse_api import TheMuseScraper  # noqa: E402
+from scrapers.workday import WorkdayScraper  # noqa: E402
 
 SCRAPER_CLASSES: tuple[type[BaseScraper], ...] = (
     # NIVEL A
@@ -72,6 +73,7 @@ SCRAPER_CLASSES: tuple[type[BaseScraper], ...] = (
     MetaCareersScraper,
     TeamtailorScraper,
     JSearchScraper,
+    WorkdayScraper,
     # NIVEL B
     ComputrabajoScraper,
     ConvocatoriasScraper,
