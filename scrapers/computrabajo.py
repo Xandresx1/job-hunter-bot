@@ -6,7 +6,7 @@ from typing import Any, Optional
 
 from bs4 import BeautifulSoup, Tag
 
-from core.models import JobOffer, strip_accents
+from core.models import JobOffer, matches_keyword, strip_accents
 from scrapers.base import BaseScraper, ScraperError
 
 
@@ -42,6 +42,7 @@ class ComputrabajoScraper(BaseScraper):
                 urls = [f"{domain}/trabajo-de-{slug}"]
                 if domain == base_url and city:
                     urls.append(f"{domain}/trabajo-de-{slug}-en-{slugify(city)}")
+                start_index = len(offers)
                 for url in urls:
                     try:
                         soup = self.http.get_soup(url)
@@ -52,16 +53,31 @@ class ComputrabajoScraper(BaseScraper):
                     if len(offers) >= self.max_offers:
                         break
 
-        # Enriquecer con la descripción del detalle en las primeras ofertas
-        max_details = int(self.option("max_details_per_keyword", 5))
-        for offer in offers[:max_details]:
-            description = self._fetch_description(offer.url)
-            if description:
-                offer.description = description
+                # FIX: detalle POR KEYWORD (antes era `offers[:5]` global: solo la primera
+                # keyword recibía detalle y las de nutrición, al final, nunca).
+                # Solo en el dominio principal y solo para cards cuyo título coincide con la
+                # keyword buscada (Computrabajo rellena la página con empleos no relacionados).
+                if domain == base_url:
+                    self._enrich_keyword_offers(offers[start_index:], keyword, city)
 
         if not offers and errors:
             raise ScraperError("; ".join(errors[:2]))
         return offers
+
+    def _enrich_keyword_offers(self, offers: list[JobOffer], keyword: str, city: str) -> None:
+        """Descarga el detalle de hasta N ofertas relevantes de una keyword (Arequipa primero)."""
+        max_details = int(self.option("max_details_per_keyword", 5))
+        if max_details <= 0:
+            return
+        city_norm = strip_accents(city).lower()
+        relevant = [o for o in offers if matches_keyword(o.title, keyword)]
+        relevant.sort(key=lambda o: 0 if city_norm and city_norm in strip_accents(o.location).lower() else 1)
+        for offer in relevant[:max_details]:
+            if len(offer.description or "") >= 400:
+                continue
+            description = self._fetch_description(offer.url)
+            if description:
+                offer.description = description
 
     # ------------------------------------------------------------------ parse
     def _parse_list(self, soup: BeautifulSoup, domain: str) -> list[JobOffer]:
