@@ -190,6 +190,7 @@ sources:
   microsoft_careers: false    # ROTA: error SSL de certificado desde datacenter
   meta_careers: false         # ROTA: Meta responde HTTP 400 a IPs de datacenter (GitHub Actions)
   teamtailor_enaex: true
+  workday: true                # NUEVA: API JSON de workday.wd5.myworkdayjobs.com (nivel A)
   jsearch: true              # requiere RAPIDAPI_KEY - ACTIVAR para cubrir Indeed/LinkedIn/Glassdoor
   bumeran: true               # ARREGLADA: ahora usa la API JSON searchNormalizado (nivel A)
   # --- NIVEL B: scraping HTML ---
@@ -218,6 +219,26 @@ source_options:
     max_details: 15
   kitempleo:
     base_url: "https://www.kitempleo.pe"
+    max_pages: 2                # páginas por búsqueda (10 ofertas c/u)
+    # Búsquedas EXTRA que se suman a search.keywords + nutricion_profile.keywords.
+    # Poner "arequipa" en la búsqueda hace que Kitempleo devuelva ofertas de Arequipa primero.
+    extra_keywords: ["nutricionista arequipa", "nutricion arequipa", "practicante sistemas arequipa", "practicante desarrollo software", "programador junior", "desarrollador junior"]
+  workday:
+    # Puedes agregar aquí CUALQUIER empresa que use Workday (BCP, Scotiabank, Nestlé...):
+    # de la URL https://<host>/<site>  ->  host, site; el tenant es el subdominio (antes de .wd5).
+    sites:
+      - host: "workday.wd5.myworkdayjobs.com"
+        tenant: "workday"
+        site: "Workday"
+        company: "Workday, Inc."
+    search_text: ""             # vacío = descarga todas y filtra por título (el buscador de Workday es difuso)
+    page_size: 20               # máximo que acepta la API
+    max_pages: 25               # 25 x 20 = 500 ofertas como tope
+    max_details: 15             # descargas de descripción completa por ciclo
+    treat_flex_as_remote: false # "Flex" en Workday = híbrido (50% oficina). Pon true si quieres verlas igual
+    countries: []               # ej. ["Spain", "Mexico", "Costa Rica", "United States"] para filtrar por país
+    title_terms: ["junior", "jr", "intern", "internship", "graduate", "early career", "entry level", "associate", "trainee", "apprentice", "new grad", "university", "student"]
+    exclude_title_terms: ["senior", "sr ", "sr.", "principal", "lead", "manager", "director", "staff"]
   buscojobs:
     base_urls: ["https://www.buscojobs.com", "https://www.buscojobs.pe"]
   bumeran:
