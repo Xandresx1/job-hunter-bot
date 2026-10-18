@@ -6,7 +6,7 @@ on:
     # Con ~13 min por ciclo son ~65 min/día (~1950 min/mes), DEBAJO del límite
     # gratuito de 2000 min/mes que aplica si el repositorio es PRIVADO.
     # (Si el repo es PÚBLICO los minutos son ilimitados y puedes volver a '0 */2 * * *')
-    - cron: '0 * * * *'
+    - cron: '23 * * * *'   # minuto "raro": menos cola en GitHub Actions
   workflow_dispatch: {}
 
 concurrency:
